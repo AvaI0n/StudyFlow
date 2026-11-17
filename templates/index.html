@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>StudyFlow - AI Academic Planner</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.22/index.global.min.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-icon">SF</div>
+            <div>
+                <h1>StudyFlow</h1>
+                <p>AI Academic Planner · Ryan Ali</p>
+            </div>
+        </div>
+        <span class="header-label">Academic Dashboard</span>
+    </div>
+</header>
+
+<nav class="toolbar">
+    <a href="/google/connect">
+        Connect Google Calendar
+    </a>
+    <button id="googleSync" type="button">
+        Refresh Google Events
+    </button>
+    <button id="canvasSync" type="button">
+        Import Canvas Assignments
+    </button>
+</nav>
+
+<p id="notice" role="status"></p>
+
+<main>
+
+    <!-- CALENDAR -->
+    <section class="wide calendar-panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Your schedule</p>
+                <h2>My Calendar</h2>
+            </div>
+            <span class="section-tag">Overview</span>
+        </div>
+
+        <p class="hint calendar-legend">
+            <span>🔵 Assignment</span>
+            <span>🔴 Work</span>
+            <span>🟢 Class</span>
+            <span>🟣 Study</span>
+            <span>⚪ Proposed Session</span>
+        </p>
+
+        <div id="studyCalendar"></div>
+    </section>
+
+    <!-- ASSIGNMENTS -->
+    <section>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Stay on track</p>
+                <h2>Assignments</h2>
+            </div>
+        </div>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">+</span>
+                    Add Assignment
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <form id="assignmentForm">
+                    <label>
+                        Name
+                        <input id="assignmentName"
+                               required
+                               placeholder="Research paper">
+                    </label>
+
+                    <label>
+                        Course
+                        <input id="courseName"
+                               placeholder="English">
+                    </label>
+
+                    <label>
+                        Due Date
+                        <input type="date"
+                               id="dueDate"
+                               required>
+                    </label>
+
+                    <label>
+                        Difficulty
+                        <select id="difficulty">
+                            <option value="">Not estimated</option>
+                            <option>Easy</option>
+                            <option>Medium</option>
+                            <option>Hard</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Estimated Hours
+                        <input id="estimatedHours"
+                               type="number"
+                               min="0.5"
+                               step="0.5"
+                               placeholder="2">
+                    </label>
+
+                    <button type="submit">Add Assignment</button>
+                </form>
+            </div>
+        </details>
+
+        <div class="list-header">
+            <h3>Upcoming Assignments</h3>
+            <p class="hint">Scroll to browse your assignments.</p>
+        </div>
+
+        <div id="assignmentList" class="scroll-list"></div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Manage your time</p>
+                <h2>Schedule & Availability</h2>
+            </div>
+        </div>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">+</span>
+                    Add Commitment
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <form id="availabilityForm">
+                    <label>
+                        Event Name
+                        <input id="commitmentName"
+                               required
+                               placeholder="Work shift">
+                    </label>
+
+                    <label>
+                        Type
+                        <select id="commitmentType">
+                            <option>Work</option>
+                            <option>Class</option>
+                            <option>Personal</option>
+                            <option>Study</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Date
+                        <input id="commitmentDate"
+                               type="date"
+                               required>
+                    </label>
+
+                    <label>
+                        Start
+                        <input id="startTime"
+                               type="time"
+                               required>
+                    </label>
+
+                    <label>
+                        End
+                        <input id="endTime"
+                               type="time"
+                               required>
+                    </label>
+
+                    <label>
+                        Classification
+                        <select id="flexibility">
+                            <option value="Fixed">
+                                Fixed / busy
+                            </option>
+                            <option value="Flexible">
+                                Flexible but busy
+                            </option>
+                            <option value="Free">
+                                Free
+                            </option>
+                        </select>
+                    </label>
+
+                    <label class="check">
+                        <input id="repeatWeekly"
+                               type="checkbox">
+                        Repeat Weekly
+                    </label>
+
+                    <button type="submit">
+                        Add Commitment
+                    </button>
+                </form>
+            </div>
+        </details>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">≡</span>
+                    Existing Commitments
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <p class="hint">
+                    Events imported from Google Calendar
+                    and commitments you've added.
+                </p>
+
+                <div id="commitmentList"
+                     class="scroll-list">
+                </div>
+            </div>
+        </details>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">✓</span>
+                    Check Availability
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <form id="checkAvailabilityForm">
+                    <label>
+                        Date
+                        <input id="checkDate"
+                               type="date"
+                               required>
+                    </label>
+
+                    <label>
+                        Start
+                        <input id="checkStart"
+                               type="time"
+                               required>
+                    </label>
+
+                    <label>
+                        End
+                        <input id="checkEnd"
+                               type="time"
+                               required>
+                    </label>
+
+                    <button type="submit">
+                        Check Time
+                    </button>
+                </form>
+
+                <p id="availabilityResult"></p>
+            </div>
+        </details>
+    </section>
+
+    <!-- AI SESSIONS -->
+    <section>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Smart planning</p>
+                <h2>AI Study Sessions</h2>
+            </div>
+        </div>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">✓</span>
+                    Review Proposed Sessions
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <p class="hint">
+                    The AI suggests sessions, but nothing
+                    gets added until you approve.
+                </p>
+
+                <div id="sessionList" class="scroll-list"></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- AI CHAT -->
+    <section>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Your personal assistant</p>
+                <h2>AI StudyFlow Assistant</h2>
+            </div>
+        </div>
+
+        <details class="accordion">
+            <summary>
+                <span class="summary-label">
+                    <span class="summary-icon">✦</span>
+                    Open AI Assistant
+                </span>
+            </summary>
+
+            <div class="accordion-content">
+                <p class="hint">
+                    Try: "What should I work on first?"
+                    or "Add a history essay due 2026-12-01."
+                </p>
+
+                <div id="chatLog" aria-live="polite"></div>
+
+                <form id="chatForm">
+                    <textarea id="chatMessage"
+                              rows="3"
+                              required
+                              placeholder="Ask your scheduling assistant..."></textarea>
+
+                    <button type="submit">Send to AI</button>
+                </form>
+            </div>
+        </details>
+    </section>
+
+</main>
+
+<footer>
+    StudyFlow · Your AI-powered academic planner
+</footer>
+
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+
+</body>
+</html>
